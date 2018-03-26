@@ -10,11 +10,11 @@ from src.mcda.implementation.safetyequation import SafetyEquation
 
 class Optimizer:
     
-    SAFE_INDEX = 4
-    LOW_HAZARD_INDEX = 3
-    MEDIUM_HAZARD_INDEX = 2
-    HIGH_HAZARD_INDEX = 1
-    UNSAFE_INDEX = -1
+    SAFE_INDEX = 5
+    LOW_HAZARD_INDEX = 4
+    MEDIUM_HAZARD_INDEX = 3
+    HIGH_HAZARD_INDEX = 2
+    UNSAFE_INDEX = 1
     
     SAFE_THRESHOLD = 3
     LOW_HAZARD_THRESHOLD = 2

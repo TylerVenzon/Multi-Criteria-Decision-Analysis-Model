@@ -123,8 +123,8 @@ class Driver:
         rowEnd = 414732
         print("Start")
         
-        f = open("mcdamap.xyz","w+")
-        
+        f = open("mcdamap_5yr.xyz","w+")
+        ad = open("alldatamcda_5yr.csv", "w+")
         #gets the whole list (containing the x, y, and z coordinates) and prepares them for the model
         def prepForMapping(xCol, yCol, zCol):
             data = []
@@ -160,7 +160,10 @@ class Driver:
         
         data = dFH.merge( dLE.merge( dLC.merge( dRNC.merge( dATDT.merge(dMC), 
                 how='outer', on='coord'), how='outer', on='coord'), how='outer', on='coord'), how='outer', on='coord')
+        allData = data
         data = data.values.tolist()
+        
+        toAppend = []
         
         for i in range(len(data)):
             coord = data[i][COORD_INDEX]
@@ -172,22 +175,33 @@ class Driver:
                                             float(data[i][MC_INDEX]))
             
             if math.isnan(score):
-                score = -1
+                score = 0
                 classificationScore = 0
             else:
                 classificationScore = Classifier.classify(score)
-            
+
             suitability.append([data[i][COORD_INDEX], score])
             classification.append([data[i][COORD_INDEX], classificationScore])
             
+            toAppend.append( [data[i][COORD_INDEX], score, classificationScore] )            
+            
             f.write("%s %d\n" % (data[i][COORD_INDEX], classificationScore))
+            ad.write("%s %f %f %f %f %f %f %d %d\n" % (data[i][COORD_INDEX],
+                                            float(data[i][FH_INDEX]), 
+                                            float(data[i][LE_INDEX]),
+                                            float(data[i][LC_INDEX]),
+                                            float(data[i][RNC_INDEX]),
+                                            float(data[i][ATDT_INDEX]),
+                                            float(data[i][MC_INDEX]), 
+                                            score,
+                                            classificationScore))
             
             if i >= 70000 and i < 70500:
                 print(i, data[i][COORD_INDEX], score, classificationScore)            
         print("End")
         
         f.close
-    
+        ad.close
         
         #print("MAX")        
         #print("max road count", max(RNCz))
