@@ -177,6 +177,9 @@ class Driver:
             if math.isnan(score):
                 score = 0
                 classificationScore = 0
+            elif float(data[i][FH_INDEX])+float(data[i][LE_INDEX])+float(data[i][LC_INDEX])+float(data[i][RNC_INDEX])+float(data[i][ATDT_INDEX])+float(data[i][MC_INDEX]) == 0: 
+                score = 0 
+                classificationScore = 0
             else:
                 classificationScore = Classifier.classify(score)
 
