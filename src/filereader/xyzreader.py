@@ -1,6 +1,12 @@
-
 class XYZReader:
 
+    FHM_FILE = 'fhm%syrs'
+    LC_FILE ='landcover'
+    LE_FILE = 'landelevationnormalized'
+    RN_FILE = 'roadnetworkcount'
+    RD_FILE = 'road_distance'
+    POP_FILE = 'population_distributed_aligned'
+    
     fhm005yrs = []
     landcover = []
     landelevation = []
@@ -8,66 +14,26 @@ class XYZReader:
     road_distance = []
     population_distributed_aligned = []
     
-    
-    def __init__(self):
-        #Read 5yr Flood Hazard Map data    
-        with open('fhm100yrs.xyz', 'r') as f:
-                    
-            for line in f:
-                #Split line separating elements through spaces
-                self.fhm005yrs.append(line.split())
-                
-            
-            #print(self.fhm005yrs[0])
-            
+    def read(self, fileName):
+        holder = []
+        try:
+            with(open("%s.xyz" % fileName, 'r')) as f:
+                for line in f:
+                   holder.append(line.split())
+                   
+            return holder
+        except IOError:
+            print("Error reading %s" % fileName)
+            return None
         
-        #Read Land Cover Map data
-        with open('landcover.xyz', 'r') as f:
-                    
-            for line in f:
-                #Split line separating elements through spaces
-                self.landcover.append(line.split())
-            
-            
-            #print(self.landcover[0])
-          
-        #Read Land Elevation Map data
-        with open('landelevationnormalized.xyz', 'r') as f:
-                    
-            for line in f:
-                self.landelevation.append(line.split())
-            
-            
-            #print(self.landelevation[0])
-        
-        #Read Road Network Count Map data
-        with open('roadnetworkcount.xyz', 'r') as f:
-                    
-            for line in f:
-                self.roadnetworkcount.append(line.split())
-            
-            
-            #print(self.roadnetworkcount[0])
-            
-        #Appropriate Road Distance    
-        with open('road_distance.xyz', 'r') as f:
-        
-            for line in f:
-                self.road_distance.append(line.split())
-            
-            
-            #print(self.road_distance[0])
-            
-            
-        #Population 
-        with open('population_distributed_aligned.xyz', 'r') as f:
-        
-            for line in f:
-                self.population_distributed_aligned.append(line.split())
-            
-            
-            #print(self.population_distributed_aligned[0])
-        #print(len(self.roadnetworkcount))
-            
+    def __init__(self, sYear):
+        #Read 5yr Flood Hazard Map data   
+        self.FHM_FILE = self.FHM_FILE % sYear
+        self.fhm005yrs = self.read(self.FHM_FILE)
+        self.landcover = self.read(self.LC_FILE)
+        self.landelevation = self.read(self.LE_FILE)
+        self.roadnetworkcount = self.read(self.RN_FILE)
+        self.road_distance = self.read(self.RD_FILE)
+        self.population_distributed_aligned = self.read(self.POP_FILE)
             
     
