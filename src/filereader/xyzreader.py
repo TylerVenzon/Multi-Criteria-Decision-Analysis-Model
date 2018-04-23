@@ -11,7 +11,7 @@ class XYZReader:
     
     def __init__(self):
         #Read 5yr Flood Hazard Map data    
-        with open('fhm005yrs.xyz', 'r') as f:
+        with open('fhm100yrs.xyz', 'r') as f:
                     
             for line in f:
                 #Split line separating elements through spaces
