@@ -4,6 +4,7 @@ from src.mcda.implementation.landusequation import LandUseEquation
 from src.mcda.implementation.maximumcoveragequation import MaximumCoverageEquation
 from src.mcda.implementation.safetyequation import SafetyEquation
 
+import numpy as np
 
 
 
@@ -32,7 +33,13 @@ class Optimizer:
     mediumHazardEquationResults = []
     highHazardEquationResults = []
     
-    def __init__(self):
+    DIVISIONS = 3
+    
+    ROAD_NETWORK_BIN = []
+    ROAD_DISTANCE_BIN = []
+    POP_PERCENTAGE_BIN = []
+    
+    def __init__(self, roadNetwork, roadDistance, popPercentage):
         #Values of factors according to the table 
         #self.safeValues = [2, 3, 2, 8, 30, .20]       
         #self.lowHazardValues = [1, 2, 1, 5, 30, .10]
@@ -47,62 +54,70 @@ class Optimizer:
         #time <= 30 minutes
         #population >= 20%
         
-        #x y z, 
+        #get the equal interval differences based on min-max values of each map.
+        roadNetwork = list(map(float, roadNetwork))
+        roadDistance = list(map(float, roadDistance))
+        popPercentage = list(map(float, popPercentage))
+        
+
+        self.ROAD_NETWORK_BIN = self.getBins(roadNetwork, self.DIVISIONS)
+        self.ROAD_DISTANCE_BIN= self.getBins(roadDistance, self.DIVISIONS)
+        self.POP_PERCENTAGE_BIN = self.getBins(popPercentage, self.DIVISIONS)
+        
+        print(self.ROAD_NETWORK_BIN)
+        print(self.ROAD_DISTANCE_BIN)
+        print(self.POP_PERCENTAGE_BIN)
+        #compute 
+        '''
+        Ideal setup of each evacuation center. Basis for a score that will be 
+        used for checking other possible ideal evacuation areas. 
+        
+        '''
+        # TODO: make this so that it is easy to change.
         self.safeValues = [3, 3, 3, 171, 334.5, 0.0002175]       
         self.lowHazardValues = [3, 3, 2, 114, 334.5, 0.000145]
         self.mediumHazardValues = [2, 2, 2, 57, 446, 0.000145]
         self.highHazardValues = [2, 2, 1, 57, 446, 0.0000725]
         
-        self.safeValues[3] = self.binRoadNetwork(self.safeValues[3])
-        self.safeValues[4] = self.binRoadDistance(self.safeValues[4])
-        self.safeValues[5] = self.binPopPercentage(self.safeValues[5])
-        
-        self.lowHazardValues[3] = self.binRoadNetwork(self.lowHazardValues[3])
-        self.lowHazardValues[4] = self.binRoadDistance(self.lowHazardValues[4])
-        self.lowHazardValues[5] = self.binPopPercentage(self.lowHazardValues[5])
-
-        self.mediumHazardValues[3] = self.binRoadNetwork(self.mediumHazardValues[3])
-        self.mediumHazardValues[4] = self.binRoadDistance(self.mediumHazardValues[4])
-        self.mediumHazardValues[5] = self.binPopPercentage(self.mediumHazardValues[5])        
-
-        self.highHazardValues[3] = self.binRoadNetwork(self.highHazardValues[3])
-        self.highHazardValues[4] = self.binRoadDistance(self.highHazardValues[4])
-        self.highHazardValues[5] = self.binPopPercentage(self.highHazardValues[5]) 
-        
-        
-        #print("VALUES")
-        #print(self.safeValues)
-        #print(self.lowHazardValues)
-        #print(self.mediumHazardValues)
-        #print(self.highHazardValues) 
-        
+        self.safeValues = self.prepOptimizer(self.safeValues)
+        self.lowHazardValues = self.prepOptimizer(self.lowHazardValues)
+        self.mediumHazardValues = self.prepOptimizer(self.mediumHazardValues)
+        self.highHazardValues = self.prepOptimizer(self.highHazardValues)
         
         self.safeEquationResults = self.computeEquations(self.safeValues)
         self.lowHazardEquationResults = self.computeEquations(self.lowHazardValues)
         self.mediumHazardEquationResults = self.computeEquations(self.mediumHazardValues)
         self.highHazardEquationResults = self.computeEquations(self.highHazardValues)
-
-
-        #print("RESULTS")
-        #print(self.safeEquationResults)
-        #print(self.lowHazardEquationResults)
-        #print(self.mediumHazardEquationResults)
-        #print(self.highHazardEquationResults)         
-
                        
         self.SAFE_THRESHOLD = self.computeScore(self.safeEquationResults)
         self.LOW_HAZARD_THRESHOLD = self.computeScore(self.lowHazardEquationResults)
         self.MEDIUM_HAZARD_THRESHOLD = self.computeScore(self.mediumHazardEquationResults)
         self.HIGH_HAZARD_THRESHOLD = self.computeScore(self.highHazardEquationResults)
-        
-        
-        #print("THRESHOLDS")
-        #print(self.SAFE_THRESHOLD)
-        #print(self.LOW_HAZARD_THRESHOLD)
-        #print(self.MEDIUM_HAZARD_THRESHOLD)
-        #print(self.HIGH_HAZARD_THRESHOLD)
 
-
+    def prepOptimizer(self, listValues):
+        listValues[3] = self.binValue(listValues[3], self.ROAD_NETWORK_BIN, False)
+        listValues[4] = self.binValue(listValues[4], self.ROAD_DISTANCE_BIN, True)
+        listValues[5] = self.binValue(listValues[5], self.POP_PERCENTAGE_BIN, False)
+        return listValues
+    
+    def getBins(self, myList, divisions):
+    
+        divisions = divisions + 2
+        binned = np.linspace(min(myList), max(myList), divisions, endpoint=True)
+        return list(binned[1:])
+    
+    def binValue(self, value, binList, isReversed):
+        if np.isnan(value) == False:    
+            for i in range(len(binList)):
+                if value <= binList[i]:
+                    if isReversed == True:
+                        #print("Reversed. Returning ", (len(binList)+1)-i)
+                        return len(binList)-i
+                    else:
+                        return (i+1)
+            return 0;
+        return -1;
+            
     @staticmethod
     def computeEquations(nodeValues):
         accessibilityEquation = AccessibilityEquation()
@@ -120,54 +135,6 @@ class Optimizer:
         equationResults.append(maximumCoverageEquation.computeCriteriaWithWeight(nodeValues[5]))
         
         return equationResults 
-        
-        
-    @staticmethod
-    def binRoadNetwork(value):
-        if value <= 57:
-            return 1
-        elif value <= 114:
-            return 2
-        elif value <= 171:
-            return 3
-        elif value > 171:
-            return 4
-        else:
-            return 0
-        
-    @staticmethod          
-    def binRoadDistance(value):
-        if value <= 111.5:
-            return 4
-        elif value <= 223:
-            return 3
-        elif value <= 334.5:
-            return 2
-        elif value > 334.5:
-            return 1
-        else:
-            return 0
-    
-    @staticmethod    
-    def binPopPercentage(value):
-        if value <= 0.0000725:
-            return 1
-        elif value <= 0.000145:
-            return 2
-        elif value <= 0.0002175:
-            return 3
-        elif value > 0.0002175:
-            return 4
-        else:
-            return 0
-            
-    @staticmethod
-    def computeScore(values):
-        total = 0;
-        for i in range(len(values)):
-            total += values[i]
-        
-        return total
 
     @staticmethod
     def computeOptimalThresholdValues():

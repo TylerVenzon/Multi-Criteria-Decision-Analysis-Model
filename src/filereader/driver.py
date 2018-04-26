@@ -11,16 +11,8 @@ from src.filereader.xyzparser import XYZParser
 class Driver:
     YEAR_TO_GENERATE = "005"
     
-    COORD_INDEX = 0
-    FH_INDEX = 1
-    LE_INDEX = 2
-    LC_INDEX = 3
-    RNC_INDEX = 4
-    ATDT_INDEX = 5
-    MC_INDEX = 6
-        
-    def computeSuitabilityScore(fhscore, lescore, lcscore, rnscore, atdtscore, mcscore):
-        optimizer = Optimizer()
+
+    def computeSuitabilityScore(optimizer, fhscore, lescore, lcscore, rnscore, atdtscore, mcscore):
         rnscore = optimizer.binRoadNetwork(rnscore)
         atdtscore = optimizer.binRoadDistance(atdtscore)
         mcscore = optimizer.binPopPercentage(mcscore)
@@ -49,8 +41,8 @@ class Driver:
         print("Starting File Parsing")
         parser = XYZParser()
         FHMx, FHMy, FHMz = parser.parse(maps.fhm005yrs, int)
+        LEx, LEy, LEz = parser.parse(maps.landelevation, int)
         LCx, LCy, LCz = parser.parse(maps.landcover, int)
-        LEx, LEy, LEz = parser.parse(maps.landcover, int)
         RNCx, RNCy, RNCz = parser.parse(maps.roadnetworkcount, int)
         RDx,RDy, RDz = parser.parse(maps.road_distance, int)
         PDAx, PDAy, PDAz = parser.parse(maps.population_distributed_aligned, float)
@@ -106,10 +98,25 @@ class Driver:
     toAppend = []
     
     #Optimization
-    print("Starting Optimization")
+    COORD_INDEX = 0
+    FH_INDEX = 1
+    LE_INDEX = 2
+    LC_INDEX = 3
+    RNC_INDEX = 4
+    ATDT_INDEX = 5
+    MC_INDEX = 6
+        
+    print("Starting Optimization and classification")
+    rn = [row[4] for row in data]
+    rd = [row[5] for row in data]
+    pp = [row[6] for row in data]
+    
+    optimizer = Optimizer(rn,rd, pp)
+    classifier = Classifier(optimizer)
     for i in range(len(data)):
         coord = data[i][COORD_INDEX]
-        score = computeSuitabilityScore(float(data[i][FH_INDEX]), 
+        score = computeSuitabilityScore(optimizer,
+                                        float(data[i][FH_INDEX]), 
                                         float(data[i][LE_INDEX]),
                                         float(data[i][LC_INDEX]),
                                         float(data[i][RNC_INDEX]),
@@ -123,7 +130,7 @@ class Driver:
             score = 0 
             classificationScore = 0
         else:
-            classificationScore = Classifier.classify(score)
+            classificationScore = classifier.classify(score)
             suitability.append([data[i][COORD_INDEX], score])
             classification.append([data[i][COORD_INDEX], classificationScore])
             
