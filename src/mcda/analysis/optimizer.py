@@ -58,16 +58,10 @@ class Optimizer:
         roadNetwork = list(map(float, roadNetwork))
         roadDistance = list(map(float, roadDistance))
         popPercentage = list(map(float, popPercentage))
-        
 
-        self.ROAD_NETWORK_BIN = self.getBins(roadNetwork, self.DIVISIONS)
-        self.ROAD_DISTANCE_BIN= self.getBins(roadDistance, self.DIVISIONS)
-        self.POP_PERCENTAGE_BIN = self.getBins(popPercentage, self.DIVISIONS)
-        
-        print(self.ROAD_NETWORK_BIN)
-        print(self.ROAD_DISTANCE_BIN)
-        print(self.POP_PERCENTAGE_BIN)
-        #compute 
+        self.ROAD_NETWORK_BIN,self.ROAD_DISTANCE_BIN,self.POP_PERCENTAGE_BIN = \
+            self.getBinsOf(roadNetwork, roadDistance, popPercentage, self.DIVISIONS)
+    
         '''
         Ideal setup of each evacuation center. Basis for a score that will be 
         used for checking other possible ideal evacuation areas. 
@@ -79,10 +73,10 @@ class Optimizer:
         self.mediumHazardValues = [2, 2, 2, 57, 446, 0.000145]
         self.highHazardValues = [2, 2, 1, 57, 446, 0.0000725]
         
-        self.safeValues = self.prepOptimizer(self.safeValues)
-        self.lowHazardValues = self.prepOptimizer(self.lowHazardValues)
-        self.mediumHazardValues = self.prepOptimizer(self.mediumHazardValues)
-        self.highHazardValues = self.prepOptimizer(self.highHazardValues)
+        self.safeValues = self.prepValues(self.safeValues)
+        self.lowHazardValues = self.prepValues(self.lowHazardValues)
+        self.mediumHazardValues = self.prepValues(self.mediumHazardValues)
+        self.highHazardValues = self.prepValues(self.highHazardValues)
         
         self.safeEquationResults = self.computeEquations(self.safeValues)
         self.lowHazardEquationResults = self.computeEquations(self.lowHazardValues)
@@ -94,14 +88,18 @@ class Optimizer:
         self.MEDIUM_HAZARD_THRESHOLD = self.computeScore(self.mediumHazardEquationResults)
         self.HIGH_HAZARD_THRESHOLD = self.computeScore(self.highHazardEquationResults)
 
-    def prepOptimizer(self, listValues):
+    def prepValues(self, listValues):
         listValues[3] = self.binValue(listValues[3], self.ROAD_NETWORK_BIN, False)
         listValues[4] = self.binValue(listValues[4], self.ROAD_DISTANCE_BIN, True)
         listValues[5] = self.binValue(listValues[5], self.POP_PERCENTAGE_BIN, False)
         return listValues
     
-    def getBins(self, myList, divisions):
+    def getBinsOf(self, rn, rd, pop, divisions=DIVISIONS):
+        return  self.getBins(rn, divisions), \
+                self.getBins(rd, divisions), \
+                self.getBins(pop, divisions)
     
+    def getBins(self, myList, divisions):
         divisions = divisions + 2
         binned = np.linspace(min(myList), max(myList), divisions, endpoint=True)
         return list(binned[1:])
@@ -110,16 +108,15 @@ class Optimizer:
         if np.isnan(value) == False:    
             for i in range(len(binList)):
                 if value <= binList[i]:
+                    #return (len(binList)*isReversed) + (-1*isReversed * i) + (1*notReversed)
                     if isReversed == True:
-                        #print("Reversed. Returning ", (len(binList)+1)-i)
                         return len(binList)-i
                     else:
                         return (i+1)
             return 0;
         return -1;
             
-    @staticmethod
-    def computeEquations(nodeValues):
+    def computeEquations(self, nodeValues):
         accessibilityEquation = AccessibilityEquation()
         appropriateTravelDistanceEquation = AppropriateTravelDistanceEquation()
         landUseEquation = LandUseEquation()
@@ -127,15 +124,20 @@ class Optimizer:
         safetyEquation = SafetyEquation()
         
         equationResults = []
+        appendResults = equationResults.append
         
-        equationResults.append(safetyEquation.computeCriteriaWithWeight(nodeValues[0], nodeValues[1]))
-        equationResults.append(landUseEquation.computeCriteriaWithWeight(nodeValues[2]))
-        equationResults.append(accessibilityEquation.computeCriteriaWithWeight(nodeValues[3]))
-        equationResults.append(appropriateTravelDistanceEquation.computeCriteriaWithWeight(nodeValues[4]))
-        equationResults.append(maximumCoverageEquation.computeCriteriaWithWeight(nodeValues[5]))
+        appendResults(safetyEquation.computeCriteriaWithWeight(nodeValues[0], nodeValues[1]))
+        appendResults(landUseEquation.computeCriteriaWithWeight(nodeValues[2]))
+        appendResults(accessibilityEquation.computeCriteriaWithWeight(nodeValues[3]))
+        appendResults(appropriateTravelDistanceEquation.computeCriteriaWithWeight(nodeValues[4]))
+        appendResults(maximumCoverageEquation.computeCriteriaWithWeight(nodeValues[5]))
         
         return equationResults 
 
+    @staticmethod 
+    def computeScore(values): 
+        return np.sum(values)
+    
     @staticmethod
     def computeOptimalThresholdValues():
         return

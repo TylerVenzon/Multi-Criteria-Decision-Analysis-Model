@@ -10,14 +10,13 @@ from src.filereader.xyzparser import XYZParser
 
 class Driver:
     YEAR_TO_GENERATE = "005"
-    
+    XYZ_OUTPUT = "mcdamap%syrs" % YEAR_TO_GENERATE
+    XYZ_OUTPUT_FILE = XYZ_OUTPUT + ".xyz"
+    ANALYSIS_OUTPUT_FILE = "alldata" + XYZ_OUTPUT + ".csv"
 
     def computeSuitabilityScore(optimizer, fhscore, lescore, lcscore, rnscore, atdtscore, mcscore):
-        rnscore = optimizer.binRoadNetwork(rnscore)
-        atdtscore = optimizer.binRoadDistance(atdtscore)
-        mcscore = optimizer.binPopPercentage(mcscore)
-            
         nodeArray = [fhscore, lescore, lcscore, rnscore, atdtscore, mcscore]
+        nodeArray = optimizer.prepValues(nodeArray)
         equationResults = optimizer.computeEquations(nodeArray)
         score = optimizer.computeScore(equationResults)
         return score
@@ -30,11 +29,11 @@ class Driver:
         maps = XYZReader(YEAR_TO_GENERATE)
     except IOError:
         print("Error reading one files. Aborting whole process")
-        sys.exit()
+        sys.exit
     except Exception as e:
         print("Unknown exception occured during file reading. Here's the trace:")
         print(e)
-        sys.exit()
+        sys.exit
         
     #File Parsing    
     try:
@@ -49,7 +48,7 @@ class Driver:
     except Exception as e:
         print("Unknown exception occured during file parsing. Here's the trace:")
         print(e)
-        sys.exit()
+        sys.exit
     
     #Dataset Preparation
     try:
@@ -63,7 +62,7 @@ class Driver:
     except Exception as e:
         print("Unknown exception occured during dataset preparation. Here's the trace:")
         print(e)
-        sys.exit()
+        sys.exit
     
     #Dataset Merging
     try:
@@ -84,19 +83,6 @@ class Driver:
     allData = data
     data = data.values.tolist()
     
-    
-    XYZ_OUTPUT = "mcdamap%syrs" % YEAR_TO_GENERATE
-    XYZ_OUTPUT_FILE = XYZ_OUTPUT + ".xyz"
-    ANALYSIS_OUTPUT_FILE = "alldata" + XYZ_OUTPUT + ".csv"
-    
-
-    f = open(XYZ_OUTPUT_FILE,"w+")
-    ad = open(ANALYSIS_OUTPUT_FILE, "w+")
-    
-    suitability = []
-    classification = []
-    toAppend = []
-    
     #Optimization
     COORD_INDEX = 0
     FH_INDEX = 1
@@ -106,44 +92,61 @@ class Driver:
     ATDT_INDEX = 5
     MC_INDEX = 6
         
-    print("Starting Optimization and classification")
+    print("Starting Optimization and classification")    
+    f = open(XYZ_OUTPUT_FILE,"w+")
+    ad = open(ANALYSIS_OUTPUT_FILE, "w+")
+    
+    fwrite = f.write
+    adwrite = ad.write
+    
     rn = [row[4] for row in data]
     rd = [row[5] for row in data]
     pp = [row[6] for row in data]
     
     optimizer = Optimizer(rn,rd, pp)
     classifier = Classifier(optimizer)
+    
+    suitability = []
+    classification = []
+    toAppend = []
+    
+    isnan = math.isnan
+    suitability_append = suitability.append
+    classification_append = classification.append
+    toAppend_append = toAppend.append
+    
+    
     for i in range(len(data)):
-        coord = data[i][COORD_INDEX]
+        toCheck = data[i]
+        coord = toCheck[COORD_INDEX]
         score = computeSuitabilityScore(optimizer,
-                                        float(data[i][FH_INDEX]), 
-                                        float(data[i][LE_INDEX]),
-                                        float(data[i][LC_INDEX]),
-                                        float(data[i][RNC_INDEX]),
-                                        float(data[i][ATDT_INDEX]),
-                                        float(data[i][MC_INDEX]))
+                                        float(toCheck[FH_INDEX]), 
+                                        float(toCheck[LE_INDEX]),
+                                        float(toCheck[LC_INDEX]),
+                                        float(toCheck[RNC_INDEX]),
+                                        float(toCheck[ATDT_INDEX]),
+                                        float(toCheck[MC_INDEX]))
         
-        if math.isnan(score):
+        if isnan(score):
             score = 0
             classificationScore = 0
-        elif float(data[i][FH_INDEX])+float(data[i][LE_INDEX])+float(data[i][LC_INDEX])+float(data[i][RNC_INDEX])+float(data[i][ATDT_INDEX])+float(data[i][MC_INDEX]) == 0: 
+        elif float(toCheck[FH_INDEX])+float(toCheck[LE_INDEX])+float(toCheck[LC_INDEX])+float(toCheck[RNC_INDEX])+float(toCheck[ATDT_INDEX])+float(toCheck[MC_INDEX]) == 0: 
             score = 0 
             classificationScore = 0
         else:
             classificationScore = classifier.classify(score)
-            suitability.append([data[i][COORD_INDEX], score])
-            classification.append([data[i][COORD_INDEX], classificationScore])
+            suitability_append([toCheck[COORD_INDEX], score])
+            classification_append([toCheck[COORD_INDEX], classificationScore])
+            toAppend_append( [toCheck[COORD_INDEX], score, classificationScore] )            
             
-            toAppend.append( [data[i][COORD_INDEX], score, classificationScore] )            
-            
-            f.write("%s %d\n" % (data[i][COORD_INDEX], classificationScore))
-            ad.write("%s %f %f %f %f %f %f %d %d\n" % (data[i][COORD_INDEX],
-                                            float(data[i][FH_INDEX]), 
-                                            float(data[i][LE_INDEX]),
-                                            float(data[i][LC_INDEX]),
-                                            float(data[i][RNC_INDEX]),
-                                            float(data[i][ATDT_INDEX]),
-                                            float(data[i][MC_INDEX]), 
+            fwrite("%s %d\n" % (toCheck[COORD_INDEX], classificationScore))
+            adwrite("%s %f %f %f %f %f %f %d %d\n" % (toCheck[COORD_INDEX],
+                                            float(toCheck[FH_INDEX]), 
+                                            float(toCheck[LE_INDEX]),
+                                            float(toCheck[LC_INDEX]),
+                                            float(toCheck[RNC_INDEX]),
+                                            float(toCheck[ATDT_INDEX]),
+                                            float(toCheck[MC_INDEX]), 
                                             score,
                                             classificationScore))
             
@@ -151,3 +154,5 @@ class Driver:
         
     f.close
     ad.close
+    
+    sys.exit
