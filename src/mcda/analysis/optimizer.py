@@ -108,7 +108,6 @@ class Optimizer:
         if np.isnan(value) == False:    
             for i in range(len(binList)):
                 if value <= binList[i]:
-                    #return (len(binList)*isReversed) + (-1*isReversed * i) + (1*notReversed)
                     if isReversed == True:
                         return len(binList)-i
                     else:
