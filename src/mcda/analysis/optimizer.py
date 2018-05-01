@@ -39,7 +39,7 @@ class Optimizer:
     ROAD_DISTANCE_BIN = []
     POP_PERCENTAGE_BIN = []
     
-    def __init__(self, roadNetwork, roadDistance, popPercentage):
+    def __init__(self, roadNetwork, roadDistance, popPercentage, default_values):
         #Values of factors according to the table 
         #self.safeValues = [2, 3, 2, 8, 30, .20]       
         #self.lowHazardValues = [1, 2, 1, 5, 30, .10]
@@ -68,11 +68,11 @@ class Optimizer:
         
         '''
         # TODO: make this so that it is easy to change.
-        self.safeValues = [3, 3, 3, 171, 334.5, 0.0002175]       
-        self.lowHazardValues = [3, 3, 2, 114, 334.5, 0.000145]
-        self.mediumHazardValues = [2, 2, 2, 57, 446, 0.000145]
-        self.highHazardValues = [2, 2, 1, 57, 446, 0.0000725]
-        
+        self.safeValues = default_values[0]
+        self.lowHazardValues = default_values[1]
+        self.mediumHazardValues = default_values[2]
+        self.highHazardValues = default_values[3]
+        '''
         self.safeValues = self.prepValues(self.safeValues)
         self.lowHazardValues = self.prepValues(self.lowHazardValues)
         self.mediumHazardValues = self.prepValues(self.mediumHazardValues)
@@ -87,7 +87,13 @@ class Optimizer:
         self.LOW_HAZARD_THRESHOLD = self.computeScore(self.lowHazardEquationResults)
         self.MEDIUM_HAZARD_THRESHOLD = self.computeScore(self.mediumHazardEquationResults)
         self.HIGH_HAZARD_THRESHOLD = self.computeScore(self.highHazardEquationResults)
-
+        '''
+        
+        self.SAFE_THRESHOLD = self.computeSuitabilityScore(*self.safeValues)
+        self.LOW_HAZARD_THRESHOLD = self.computeSuitabilityScore(*self.lowHazardValues)
+        self.MEDIUM_HAZARD_THRESHOLD = self.computeSuitabilityScore(*self.mediumHazardValues)
+        self.HIGH_HAZARD_THRESHOLD = self.computeSuitabilityScore(*self.highHazardValues)
+        
     def prepValues(self, listValues):
         listValues[3] = self.binValue(listValues[3], self.ROAD_NETWORK_BIN, False)
         listValues[4] = self.binValue(listValues[4], self.ROAD_DISTANCE_BIN, True)
@@ -132,51 +138,11 @@ class Optimizer:
         appendResults(maximumCoverageEquation.computeCriteriaWithWeight(nodeValues[5]))
         
         return equationResults 
-
-    @staticmethod 
-    def computeScore(values): 
-        return np.sum(values)
     
-    @staticmethod
-    def computeOptimalThresholdValues():
-        return
-        #SafeValue:
-        #flood hazard level >= 2; E1
-        #land elevation > 2; E1
-        #land cover >= 2; E2
-        #road networks >= 8; E3
-        #time <= 30 minutes
-        #population >= 20%
         
-        #LowHazardValue:
-        #flood hazard level >= 1; E1
-        #land elevation > 1; E1
-        #land cover >= 1; E2
-        #road networks 5 <= value <= 7; E3
-        #time <= 30 minutes
-        #population >= 10%
-        
-        #MediumHazardValue:
-        #flood hazard level >= 1; E1
-        #land elevation > 1; E1
-        #land cover >= 0; E2
-        #road networks 2 <= value <= 4; E3
-        #time <= 60 minutes
-        #population >= 10%
-        
-        #HighHazardValue:
-        #flood hazard level >= 1; E1
-        #land elevation > 1 ; E1
-        #land cover >= 0; E2
-        #road networks <= 1; E3
-        #time <= 60 minutes
-        #population >= 5%
-
-        #thresholdValuesDict['HIGH_HAZARD_INDEX'] = 4;
-        #thresholdValuesDict['MEDIUM_HAZARD_INDEX'] = 6;
-        #thresholdValuesDict['LOW_HAZARD_INDEX'] = 13;
-        #thresholdValuesDict['SAFE_INDEX'] = 18;
-        
-        #BASIS FOR DISCRETIZATION
-
-        #PLOT FREQUENCY OF EXISTING EQUATIONS THEN EVALUATE FROM THERE
+    def computeSuitabilityScore(self, fhscore, lescore, lcscore, rnscore, atdtscore, mcscore):
+        nodeArray = [fhscore, lescore, lcscore, rnscore, atdtscore, mcscore]
+        nodeArray = self.prepValues(nodeArray)
+        equationResults = self.computeEquations(nodeArray)
+        return np.sum(equationResults)
+    

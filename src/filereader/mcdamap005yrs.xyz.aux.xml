@@ -12,9 +12,9 @@
     </Histograms>
     <Metadata>
       <MDI key="STATISTICS_MAXIMUM">5</MDI>
-      <MDI key="STATISTICS_MEAN">4.0164899723747</MDI>
+      <MDI key="STATISTICS_MEAN">4.0137733270605</MDI>
       <MDI key="STATISTICS_MINIMUM">1</MDI>
-      <MDI key="STATISTICS_STDDEV">0.73190867074777</MDI>
+      <MDI key="STATISTICS_STDDEV">0.73715345336163</MDI>
     </Metadata>
   </PAMRasterBand>
 </PAMDataset>
