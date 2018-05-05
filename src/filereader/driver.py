@@ -2,6 +2,7 @@ import math
 import pandas as pd
 import numpy as np 
 import sys
+from pyproj import Proj, transform
 
 from src.classifier.classifier import Classifier
 from src.mcda.analysis.optimizer import Optimizer
@@ -20,7 +21,7 @@ class Driver:
                       [2, 2, 2, 57, 446, 0.000145],     # LOW SUITABILITY
                       [2, 2, 1, 57, 446, 0.0000725]]    # VERY LOW SUITABILITY
     
-    NON-PEOPLE BASED = [3,3,1,1,1]
+    NON_PEOPLE_BASED = [3,3,1,1,1]
     PEOPLE_BASED = [2,2,3,3,3]
     DEFAULT_WEIGHTS = [3, 1, 2, 2, 2]
     
@@ -190,7 +191,11 @@ class Driver:
                 toAppend_append( [toCheck[COORD_INDEX], score, classificationScore] )            
                 
                 fwrite("%s %d\n" % (toCheck[COORD_INDEX], classificationScore))
-                adwrite("%s %f %f %f %f %f %f %d %d\n" % (toCheck[COORD_INDEX],
+            
+                inProj = Proj(init='epsg:32651')
+                outProj = Proj(init='epsg:4326')
+                coordinates = transform(inProj, outProj, *list(map(int, toCheck[COORD_INDEX].split(" "))))
+                adwrite("%f,%f,%f,%f,%f,%f,%f,%f,%d,%d\n" % ( *coordinates,
                                                 *nodeArray, 
                                                 score,
                                                 classificationScore))
