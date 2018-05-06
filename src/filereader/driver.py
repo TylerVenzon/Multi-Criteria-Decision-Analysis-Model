@@ -16,10 +16,15 @@ class Driver:
     ###########################################################################
     
     # default values for the ideal configuration of the area's suitability
-    DEFAULT_VALUES = [[3, 3, 3, 171, 334.5, 0.0002175], # VERY HIGH SUITABILITY
-                      [3, 3, 2, 114, 334.5, 0.000145],  # HIGH SUITABILITY
-                      [2, 2, 2, 57, 446, 0.000145],     # LOW SUITABILITY
-                      [2, 2, 1, 57, 446, 0.0000725]]    # VERY LOW SUITABILITY
+    #DEFAULT_VALUES = [[3, 3, 3, 171, 334.5, 0.0002175], # VERY HIGH SUITABILITY
+    #                  [3, 3, 2, 114, 334.5, 0.000145],  # HIGH SUITABILITY
+    #                  [2, 2, 2, 57, 446, 0.000145],     # LOW SUITABILITY
+    #                  [2, 2, 1, 57, 446, 0.0000725]]    # VERY LOW SUITABILITY
+    
+    DEFAULT_VALUES = [[3, 3, 3, 3, 2, 3], # VERY HIGH SUITABILITY
+                      [3, 3, 2, 2, 2, 2],  # HIGH SUITABILITY
+                      [2, 2, 2, 1, 1, 2],     # LOW SUITABILITY
+                      [2, 2, 1, 1, 1, 1]]    # VERY LOW SUITABILITY
     
     NON_PEOPLE_BASED = [3,3,1,1,1]
     PEOPLE_BASED = [2,2,3,3,3]

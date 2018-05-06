@@ -89,10 +89,10 @@ class Optimizer:
         self.HIGH_HAZARD_THRESHOLD = self.computeScore(self.highHazardEquationResults)
         '''
         
-        self.SAFE_THRESHOLD = self.computeSuitabilityScore(*self.safeValues)
-        self.LOW_HAZARD_THRESHOLD = self.computeSuitabilityScore(*self.lowHazardValues)
-        self.MEDIUM_HAZARD_THRESHOLD = self.computeSuitabilityScore(*self.mediumHazardValues)
-        self.HIGH_HAZARD_THRESHOLD = self.computeSuitabilityScore(*self.highHazardValues)
+        self.SAFE_THRESHOLD = self.computeSuitabilityScoreWithoutPrep(*self.safeValues)
+        self.LOW_HAZARD_THRESHOLD = self.computeSuitabilityScoreWithoutPrep(*self.lowHazardValues)
+        self.MEDIUM_HAZARD_THRESHOLD = self.computeSuitabilityScoreWithoutPrep(*self.mediumHazardValues)
+        self.HIGH_HAZARD_THRESHOLD = self.computeSuitabilityScoreWithoutPrep(*self.highHazardValues)
         
     def prepValues(self, listValues):
         listValues[3] = self.binValue(listValues[3], self.ROAD_NETWORK_BIN, False)
@@ -139,7 +139,11 @@ class Optimizer:
         
         return equationResults 
     
-        
+    def computeSuitabilityScoreWithoutPrep(self, fhscore, lescore, lcscore, rnscore, atdtscore, mcscore):    
+        nodeArray = [fhscore, lescore, lcscore, rnscore, atdtscore, mcscore]
+        equationResults = self.computeEquations(nodeArray)
+        return np.sum(equationResults)
+    
     def computeSuitabilityScore(self, fhscore, lescore, lcscore, rnscore, atdtscore, mcscore):
         nodeArray = [fhscore, lescore, lcscore, rnscore, atdtscore, mcscore]
         nodeArray = self.prepValues(nodeArray)

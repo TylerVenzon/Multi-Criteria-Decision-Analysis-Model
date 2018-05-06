@@ -5,7 +5,7 @@ class XYZReader:
     LE_FILE = 'landelevationnormalized'
     RN_FILE = 'roadnetworkcount'
     RD_FILE = 'road_distance'
-    POP_FILE = 'population_distributed_aligned'
+    POP_FILE = 'population_distributed_aligned_cbms'
     
     fhm005yrs = []
     landcover = []
